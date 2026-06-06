@@ -1,0 +1,40 @@
+name = "techsignal-worker"
+main = "src/index.ts"
+compatibility_date = "2024-09-23"
+compatibility_flags = ["nodejs_compat"]
+
+[[d1_databases]]
+binding = "DB"
+database_name = "techsignal-db"
+database_id = "bad0fc3e-8024-4a1b-b52c-cdbd91ed64a1"
+
+[[kv_namespaces]]
+binding = "HASH_STORE"
+id = "e47d063ebffa48a1b85de8568fbc36d1"
+preview_id = "73ce57c496ff41ba8d920a012607e2b0"
+
+[[queues.producers]]
+binding = "SCAN_QUEUE"
+queue = "techsignal-scan-queue"
+
+[[queues.consumers]]
+queue = "techsignal-scan-queue"
+max_batch_size = 5
+max_batch_timeout = 30
+max_retries = 2
+dead_letter_queue = "techsignal-scan-dlq"
+
+[triggers]
+crons = ["0 */6 * * *"]  # Every 6 hours
+
+[vars]
+ALLOWED_ORIGINS = "https://techsignal.pages.dev,http://localhost:5173"
+RATE_LIMIT_MAX = "60"
+RATE_LIMIT_WINDOW_SECONDS = "60"
+UNLOCK_PRICE_EUR = "49"
+
+# Secrets (set via `wrangler secret put <NAME>`):
+# AI_API_KEY  (for LLM pitch generation — currently mocked)
+# ADMIN_KEY   (Bearer token required for mutating API routes: POST/DELETE
+#              companies, POST scan, POST unlock. Generate a long random value,
+#              e.g. `openssl rand -hex 32`. Mutations fail closed until set.)

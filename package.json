@@ -1,0 +1,25 @@
+{
+  "name": "techsignal-worker",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate": "wrangler d1 execute techsignal-db --file=migrations/0001_initial.sql",
+    "db:migrate:local": "wrangler d1 execute techsignal-db --local --file=migrations/0001_initial.sql",
+    "types": "wrangler types",
+    "test": "vitest run",
+    "test:watch": "vitest"
+  },
+  "dependencies": {
+    "hono": "^4.4.0",
+    "zod": "^3.23.8"
+  },
+  "devDependencies": {
+    "@cloudflare/vitest-pool-workers": "^0.16.13",
+    "@cloudflare/workers-types": "^4.20240909.0",
+    "typescript": "^5.5.4",
+    "vitest": "^4.1.8",
+    "wrangler": "^3.70.0"
+  }
+}
