@@ -7,13 +7,14 @@ export interface SignalFilterState {
   status?: SignalStatus;
 }
 
-const POLL_MS = 15_000;
+const POLL_MS = 30_000;
 
 export function useSignals(initial: SignalFilterState = {}) {
   const [signals, setSignals] = useState<IntentSignal[]>([]);
   const [total, setTotal] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updatedAt, setUpdatedAt] = useState<Date | null>(null);
   const [filters, setFilters] = useState<SignalFilterState>(initial);
 
   // Keep latest filters in a ref so the polling interval always reads current.
@@ -31,6 +32,7 @@ export function useSignals(initial: SignalFilterState = {}) {
       });
       setSignals(res.data);
       setTotal(res.total);
+      setUpdatedAt(new Date());
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load signals');
@@ -57,6 +59,7 @@ export function useSignals(initial: SignalFilterState = {}) {
     total,
     isLoading,
     error,
+    updatedAt,
     refetch,
     filters,
     setFilters,

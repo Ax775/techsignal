@@ -8,6 +8,7 @@ import {
 import type { Company } from '../types';
 
 const PAGE_SIZE = 20;
+const POLL_MS = 30_000;
 
 export function useCompanies() {
   const [companies, setCompanies] = useState<Company[]>([]);
@@ -18,29 +19,41 @@ export function useCompanies() {
   const [error, setError] = useState<string | null>(null);
   const [busyId, setBusyId] = useState<string | null>(null);
 
-  const fetchCompanies = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      const res = await getCompanies({ page, limit: PAGE_SIZE, search });
-      setCompanies(res.data);
-      setTotal(res.total);
-      setError(null);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load companies');
-    } finally {
-      setIsLoading(false);
-    }
-  }, [page, search]);
+  const fetchCompanies = useCallback(
+    async (showSpinner = true) => {
+      if (showSpinner) setIsLoading(true);
+      try {
+        const res = await getCompanies({ page, limit: PAGE_SIZE, search });
+        setCompanies(res.data);
+        setTotal(res.total);
+        setError(null);
+      } catch (err) {
+        setError(
+          err instanceof Error ? err.message : 'Failed to load companies',
+        );
+      } finally {
+        if (showSpinner) setIsLoading(false);
+      }
+    },
+    [page, search],
+  );
 
   useEffect(() => {
-    void fetchCompanies();
+    void fetchCompanies(true);
+  }, [fetchCompanies]);
+
+  // Background poll without the spinner, so a scan finishing or a count change
+  // shows up on its own without the table flashing "Loading…".
+  useEffect(() => {
+    const id = window.setInterval(() => void fetchCompanies(false), POLL_MS);
+    return () => window.clearInterval(id);
   }, [fetchCompanies]);
 
   const addCompany = useCallback(
     async (domain: string, name?: string) => {
       await apiAddCompany(domain, name);
       setPage(1);
-      await fetchCompanies();
+      await fetchCompanies(false);
     },
     [fetchCompanies],
   );
@@ -50,7 +63,7 @@ export function useCompanies() {
       setBusyId(id);
       try {
         await apiScanCompany(id);
-        await fetchCompanies();
+        await fetchCompanies(false);
       } finally {
         setBusyId(null);
       }
@@ -63,7 +76,7 @@ export function useCompanies() {
       setBusyId(id);
       try {
         await apiDeleteCompany(id);
-        await fetchCompanies();
+        await fetchCompanies(false);
       } finally {
         setBusyId(null);
       }

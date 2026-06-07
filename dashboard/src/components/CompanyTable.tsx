@@ -1,17 +1,9 @@
 import { useState, type FormEvent } from 'react';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Check, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCompanies } from '../hooks/useCompanies';
 import { absolute, timeAgo } from '../lib/time';
 import TechBadge from './TechBadge';
 import type { Company, ScanStatus, TechCategory, TechStack } from '../types';
-
-// Monospace state pills — the status reads like a log line, not a marketing badge.
-const STATUS_STYLES: Record<ScanStatus, string> = {
-  pending: 'text-slate-400',
-  scanning: 'text-blue-400',
-  done: 'text-emerald-400',
-  error: 'text-red-400',
-};
 
 const CATEGORY_ORDER: TechCategory[] = [
   'ecommerce',
@@ -77,59 +69,81 @@ export default function CompanyTable() {
   };
 
   return (
-    <div className="space-y-6">
-      {/* Track new domain — its own section, separate from the data table. */}
-      <section>
-        <h2 className="text-sm font-medium text-slate-200">Track new domain</h2>
+    <div className="space-y-3">
+      <div>
+        <h2 className="text-sm font-medium text-slate-200">Tracked domains</h2>
         <p className="mt-0.5 text-xs text-slate-500">
-          We snapshot the site and watch its stack for churn, adoption, and
+          We snapshot each site and watch its stack for churn, adoption, and
           vulnerabilities.
         </p>
-        <form
-          onSubmit={handleAdd}
-          className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-center"
-        >
-          <input
-            value={domain}
-            onChange={(e) => setDomain(e.target.value)}
-            placeholder="example.com"
-            className="tabular flex-1 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40"
-          />
-          <input
-            value={name}
-            onChange={(e) => setName(e.target.value)}
-            placeholder="Company name (optional)"
-            className="flex-1 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40"
-          />
-          <button
-            type="submit"
-            disabled={adding}
-            className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-60"
-          >
-            {adding ? 'Adding…' : 'Track domain'}
-          </button>
-        </form>
-        {formError && <p className="mt-2 text-xs text-red-400">{formError}</p>}
-      </section>
-
-      {/* Search */}
-      <form onSubmit={handleSearch} className="flex items-center gap-2">
-        <input
-          value={searchInput}
-          onChange={(e) => setSearchInput(e.target.value)}
-          placeholder="Filter by domain or name…"
-          className="flex-1 rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40"
-        />
-        <button
-          type="submit"
-          className="rounded-md border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-800"
-        >
-          Search
-        </button>
-      </form>
+      </div>
 
       {/* Table */}
       <div className="overflow-hidden rounded-lg border border-slate-800">
+        {/* Toolbar — add a domain inline, filter the list, all at the top of the table. */}
+        <div className="flex flex-col gap-3 border-b border-slate-800 bg-slate-900/30 p-3 lg:flex-row lg:items-end lg:justify-between">
+          <form
+            onSubmit={handleAdd}
+            className="flex flex-col gap-2 sm:flex-row sm:items-center"
+          >
+            <div className="flex flex-col gap-1">
+              <label htmlFor="add-domain" className="sr-only">
+                Domain to track
+              </label>
+              <input
+                id="add-domain"
+                value={domain}
+                onChange={(e) => setDomain(e.target.value)}
+                placeholder="example.com"
+                className="tabular w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40 sm:w-44"
+              />
+            </div>
+            <div className="flex flex-col gap-1">
+              <label htmlFor="add-name" className="sr-only">
+                Company name (optional)
+              </label>
+              <input
+                id="add-name"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                placeholder="Company name (optional)"
+                className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40 sm:w-52"
+              />
+            </div>
+            <button
+              type="submit"
+              disabled={adding}
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-60"
+            >
+              {adding ? 'Adding…' : 'Track domain'}
+            </button>
+          </form>
+
+          <form onSubmit={handleSearch} className="flex items-center gap-2">
+            <label htmlFor="company-search" className="sr-only">
+              Filter domains
+            </label>
+            <input
+              id="company-search"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Filter by domain or name…"
+              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40 sm:w-56"
+            />
+            <button
+              type="submit"
+              className="rounded-md border border-slate-700 px-4 py-2 text-sm text-slate-300 transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
+            >
+              Search
+            </button>
+          </form>
+        </div>
+        {formError && (
+          <p className="border-b border-slate-800 bg-red-950/20 px-4 py-2 text-xs text-red-400">
+            {formError}
+          </p>
+        )}
+
         <div className="overflow-x-auto">
           <table className="min-w-full text-sm">
             <thead>
@@ -220,26 +234,22 @@ export default function CompanyTable() {
                         )}
                       </td>
                       <td className="px-3 py-3">
-                        <span
-                          className={`tabular text-xs ${STATUS_STYLES[co.scan_status]} ${
-                            co.scan_status === 'scanning' ? 'animate-pulse' : ''
-                          }`}
-                        >
-                          {co.scan_status}
-                        </span>
+                        <StatusChip status={co.scan_status} />
                       </td>
                       <td className="whitespace-nowrap py-3 pl-3 pr-4 text-right">
                         <button
+                          type="button"
                           onClick={() => scanCompany(co.id)}
                           disabled={busy}
-                          className="text-xs font-medium text-blue-400 transition hover:text-blue-300 disabled:opacity-50"
+                          className="rounded text-xs font-medium text-blue-400 transition hover:text-blue-300 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 disabled:opacity-50"
                         >
                           {busy ? 'Working…' : 'Scan now'}
                         </button>
                         <button
+                          type="button"
                           onClick={() => removeCompany(co.id)}
                           disabled={busy}
-                          className="ml-3 text-xs text-slate-500 transition hover:text-red-400 disabled:opacity-50"
+                          className="ml-3 rounded text-xs text-slate-500 transition hover:text-red-400 focus:outline-none focus-visible:ring-2 focus-visible:ring-red-500/40 disabled:opacity-50"
                         >
                           Remove
                         </button>
@@ -260,17 +270,19 @@ export default function CompanyTable() {
           </span>
           <div className="flex items-center gap-1">
             <button
+              type="button"
               onClick={() => setPage(Math.max(1, page - 1))}
               disabled={page <= 1}
-              className="rounded border border-slate-700 p-1 transition hover:bg-slate-800 disabled:opacity-40"
+              className="rounded border border-slate-700 p-1 transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 disabled:opacity-40"
               aria-label="Previous page"
             >
               <ChevronLeft className="h-4 w-4" />
             </button>
             <button
+              type="button"
               onClick={() => setPage(Math.min(totalPages, page + 1))}
               disabled={page >= totalPages}
-              className="rounded border border-slate-700 p-1 transition hover:bg-slate-800 disabled:opacity-40"
+              className="rounded border border-slate-700 p-1 transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 disabled:opacity-40"
               aria-label="Next page"
             >
               <ChevronRight className="h-4 w-4" />
@@ -279,5 +291,43 @@ export default function CompanyTable() {
         </div>
       </div>
     </div>
+  );
+}
+
+// Three states the user actually cares about, plus error. The dot pulses only
+// while a scan is in flight — the one place motion means "work is happening".
+function StatusChip({ status }: { status: ScanStatus }) {
+  if (status === 'done') {
+    return (
+      <span className="tabular inline-flex items-center gap-1 text-xs text-emerald-400">
+        <Check className="h-3.5 w-3.5" aria-hidden />
+        done
+      </span>
+    );
+  }
+  if (status === 'scanning') {
+    return (
+      <span className="tabular inline-flex items-center gap-1.5 text-xs text-blue-400">
+        <span
+          className="h-1.5 w-1.5 animate-pulse rounded-full bg-blue-400"
+          aria-hidden
+        />
+        scanning
+      </span>
+    );
+  }
+  if (status === 'error') {
+    return (
+      <span className="tabular inline-flex items-center gap-1.5 text-xs text-red-400">
+        <span className="h-1.5 w-1.5 rounded-full bg-red-500" aria-hidden />
+        error
+      </span>
+    );
+  }
+  return (
+    <span className="tabular inline-flex items-center gap-1.5 text-xs text-slate-400">
+      <span className="h-1.5 w-1.5 rounded-full bg-slate-500" aria-hidden />
+      pending
+    </span>
   );
 }

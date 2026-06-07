@@ -24,9 +24,11 @@ export default function App() {
   const { signals, total } = useSignals();
   const churn = signals.filter((s) => s.change_type === 'churn').length;
   const adoption = signals.filter((s) => s.change_type === 'adoption').length;
-  const vulnerability = signals.filter(
-    (s) => s.change_type === 'vulnerability',
-  ).length;
+  const avgValue = signals.length
+    ? Math.round(
+        signals.reduce((sum, s) => sum + s.price, 0) / signals.length,
+      )
+    : 0;
 
   return (
     <div className="min-h-screen bg-slate-950">
@@ -38,6 +40,7 @@ export default function App() {
           {TABS.map((t) => (
             <button
               key={t.key}
+              type="button"
               onClick={() => setTab(t.key)}
               className={`-mb-px border-b-2 pb-2.5 text-sm transition ${
                 tab === t.key
@@ -60,11 +63,10 @@ export default function App() {
               <Sep />
               <Stat n={adoption} label="adoption" tone="text-green-400" />
               <Sep />
-              <Stat
-                n={vulnerability}
-                label="vulnerability"
-                tone="text-amber-400"
-              />
+              <span>
+                <span className="tabular text-slate-100">€{avgValue}</span>{' '}
+                <span className="text-slate-500">avg value</span>
+              </span>
             </p>
             <LiveIntentFeed onSelect={setSelected} />
           </div>

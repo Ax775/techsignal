@@ -37,28 +37,30 @@ const FILTERS: { key: 'all' | ChangeType; label: string }[] = [
 ];
 
 export default function LiveIntentFeed({ onSelect }: LiveIntentFeedProps) {
-  const { signals, isLoading, error, filters, setFilters } = useSignals();
+  const { signals, isLoading, error, updatedAt, filters, setFilters } =
+    useSignals();
   const active = filters.type ?? 'all';
 
   return (
     <section>
-      {/* Filter tabs — plain text, not colored pills. */}
-      <div className="mb-3 flex items-center gap-5 border-b border-slate-800/80">
+      {/* Filter pills — a data filter, visually distinct from the section nav. */}
+      <div className="mb-3 flex flex-wrap items-center gap-1.5">
         {FILTERS.map((f) => {
           const selected = active === f.key;
           return (
             <button
               key={f.key}
+              type="button"
               onClick={() =>
                 setFilters({
                   ...filters,
                   type: f.key === 'all' ? undefined : f.key,
                 })
               }
-              className={`-mb-px border-b-2 pb-2 text-sm transition ${
+              className={`rounded-full px-3 py-1 text-xs font-medium transition focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50 ${
                 selected
-                  ? 'border-blue-500 font-medium text-white'
-                  : 'border-transparent text-slate-500 hover:text-slate-300'
+                  ? 'bg-blue-500/10 text-blue-300 ring-1 ring-inset ring-blue-500/30'
+                  : 'text-slate-400 hover:bg-slate-800/60 hover:text-slate-200'
               }`}
             >
               {f.label}
@@ -82,8 +84,8 @@ export default function LiveIntentFeed({ onSelect }: LiveIntentFeedProps) {
               <tr className="border-b border-slate-800 text-left text-[10px] uppercase tracking-wider text-slate-500">
                 <th className="py-2.5 pl-4 pr-3 font-medium">Company</th>
                 <th className="px-3 py-2.5 font-medium">Tech</th>
-                <th className="px-3 py-2.5 font-medium">Signal</th>
-                <th className="px-3 py-2.5 text-right font-medium">When</th>
+                <th className="px-3 py-2.5 font-medium">Change</th>
+                <th className="px-3 py-2.5 text-right font-medium">Time</th>
                 <th className="py-2.5 pl-3 pr-4 text-right font-medium">
                   {/* action column */}
                 </th>
@@ -98,13 +100,22 @@ export default function LiveIntentFeed({ onSelect }: LiveIntentFeedProps) {
                   <tr
                     key={s.id}
                     onClick={() => onSelect(s)}
-                    className={`cursor-pointer border-l-2 border-b border-slate-800/60 transition last:border-b-0 ${meta.row}`}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        onSelect(s);
+                      }
+                    }}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={`${s.domain ?? s.company_name ?? 'signal'} — ${meta.label} on ${s.tech_involved}`}
+                    className={`cursor-pointer border-l-2 border-b border-slate-800/60 transition last:border-b-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-blue-500/60 ${meta.row}`}
                   >
                     <td className="py-3 pl-4 pr-3 align-top">
                       <div className="flex items-center gap-2">
                         <span
                           className={`h-1.5 w-1.5 shrink-0 rounded-full ${
-                            fresh ? `animate-pulse ${dotColor(s.change_type)}` : 'bg-slate-600'
+                            fresh ? dotColor(s.change_type) : 'bg-slate-600'
                           }`}
                           title={fresh ? 'New in the last 2 minutes' : undefined}
                           aria-hidden
@@ -152,6 +163,25 @@ export default function LiveIntentFeed({ onSelect }: LiveIntentFeedProps) {
           </table>
         )}
       </div>
+
+      {/* Discrete "last updated" — the feed polls every 30s. */}
+      {updatedAt && !error && (
+        <p className="mt-2 text-[11px] text-slate-600">
+          Updated{' '}
+          <time
+            className="tabular"
+            dateTime={updatedAt.toISOString()}
+            title={updatedAt.toLocaleString()}
+          >
+            {updatedAt.toLocaleTimeString(undefined, {
+              hour: '2-digit',
+              minute: '2-digit',
+              second: '2-digit',
+              hour12: false,
+            })}
+          </time>
+        </p>
+      )}
     </section>
   );
 }
@@ -181,9 +211,10 @@ function LoadingRows() {
 function EmptyState() {
   return (
     <div className="m-4 rounded-md border border-dashed border-slate-700 px-6 py-12 text-center">
-      <p className="text-sm text-slate-300">No signals detected yet.</p>
+      <p className="text-sm text-slate-300">No signals yet</p>
       <p className="mt-1 text-xs text-slate-500">
-        Add companies to start tracking their tech stack for change.
+        Add companies on the Companies tab to start tracking technographic
+        changes.
       </p>
     </div>
   );

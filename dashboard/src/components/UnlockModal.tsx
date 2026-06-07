@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Check, X, Copy } from 'lucide-react';
+import { X, Copy } from 'lucide-react';
 import { unlockSignal } from '../api/client';
 import { absolute, timeAgo } from '../lib/time';
 import type { ChangeType, IntentSignal } from '../types';
@@ -98,8 +98,9 @@ export default function UnlockModal({
         <div className="flex items-center justify-between border-b border-slate-800 px-5 py-3.5">
           <h3 className="text-sm font-medium text-slate-100">Signal detail</h3>
           <button
+            type="button"
             onClick={onClose}
-            className="rounded p-1 text-slate-500 transition hover:bg-slate-800 hover:text-slate-200"
+            className="rounded p-1 text-slate-500 transition hover:bg-slate-800 hover:text-slate-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
             aria-label="Close"
           >
             <X className="h-4 w-4" />
@@ -164,19 +165,12 @@ export default function UnlockModal({
               <div className="space-y-4">
                 <div>
                   <p className="text-xs font-medium text-slate-300">
-                    What you get
+                    Unlock to get
                   </p>
-                  <ul className="mt-2 space-y-1.5 text-xs text-slate-400">
-                    {[
-                      'Full personalized cold-email pitch',
-                      'Decision-maker intent & timing context',
-                      'The exact tech change that triggered it',
-                    ].map((item) => (
-                      <li key={item} className="flex items-start gap-2">
-                        <span className="mt-px text-emerald-400">✓</span>
-                        <span>{item}</span>
-                      </li>
-                    ))}
+                  <ul className="mt-2 space-y-1 text-xs leading-relaxed text-slate-400">
+                    <li>A full personalized cold-email pitch, ready to send</li>
+                    <li>Decision-maker intent and timing context</li>
+                    <li>The exact tech change that triggered the signal</li>
                   </ul>
                 </div>
 
@@ -192,47 +186,50 @@ export default function UnlockModal({
                     type="text"
                     value={paymentRef}
                     onChange={(e) => setPaymentRef(e.target.value)}
-                    placeholder="pi_3Q8x…"
+                    placeholder="Any non-empty string unlocks"
                     className="tabular w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40"
                   />
                   <p className="mt-1.5 text-[11px] text-slate-500">
-                    Enter your order reference from Stripe.
+                    Demo mode — any reference code unlocks the pitch.
                   </p>
                 </div>
 
                 {error && <p className="text-xs text-red-400">{error}</p>}
 
                 <button
+                  type="button"
                   onClick={handleUnlock}
                   disabled={submitting}
                   className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-60"
                 >
-                  {submitting ? 'Unlocking…' : 'Unlock signal →'}
+                  {submitting
+                    ? 'Unlocking…'
+                    : `Unlock pitch — €${view.price.toFixed(0)}`}
                 </button>
                 <p className="tabular text-center text-[11px] text-slate-500">
-                  €{view.price.toFixed(0)} · one-time, per signal
+                  One-time, per signal
                 </p>
               </div>
             ) : (
               <div className="space-y-3">
-                <div className="flex items-center gap-2 text-xs text-emerald-400">
-                  <Check className="h-3.5 w-3.5" />
+                <p className="text-xs font-medium text-emerald-400">
                   Unlocked — ready to send.
-                </div>
+                </p>
                 <div className="rounded-md border border-slate-800 bg-slate-950/60">
                   <div className="flex items-center justify-between border-b border-slate-800 px-3 py-2">
                     <span className="text-[10px] font-medium uppercase tracking-wider text-slate-500">
                       Email template
                     </span>
                     <button
+                      type="button"
                       onClick={handleCopy}
-                      className="inline-flex items-center gap-1 rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-300 transition hover:bg-slate-800"
+                      className="inline-flex items-center gap-1 rounded border border-slate-700 px-2 py-1 text-[11px] text-slate-300 transition hover:bg-slate-800 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500/50"
                     >
                       <Copy className="h-3 w-3" />
                       {copied ? 'Copied' : 'Copy'}
                     </button>
                   </div>
-                  <pre className="max-h-64 overflow-y-auto whitespace-pre-wrap break-words px-3 py-3 font-sans text-xs leading-relaxed text-slate-200">
+                  <pre className="max-h-80 overflow-y-auto whitespace-pre-wrap break-words px-4 py-4 font-sans text-sm leading-relaxed text-slate-100">
                     {view.generated_pitch ?? 'No pitch available for this signal.'}
                   </pre>
                 </div>
