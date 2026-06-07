@@ -82,13 +82,17 @@ export function getSignal(id: string): Promise<{ data: IntentSignal }> {
   return request<{ data: IntentSignal }>(`/api/signals/${encodeURIComponent(id)}`);
 }
 
-export function unlockSignal(
-  id: string,
-  paymentRef: string,
-): Promise<{ data: IntentSignal; unlocked: boolean }> {
-  return request(`/api/unlock/${encodeURIComponent(id)}`, {
+/**
+ * Create a Stripe Checkout Session for unlocking a signal. Returns the hosted
+ * Checkout URL the caller should redirect the browser to. The signal stays
+ * locked until Stripe confirms payment via the webhook.
+ */
+export function createCheckoutSession(
+  signalId: string,
+): Promise<{ url: string }> {
+  return request(`/api/checkout`, {
     method: 'POST',
-    body: JSON.stringify({ payment_ref: paymentRef }),
+    body: JSON.stringify({ signal_id: signalId }),
   });
 }
 

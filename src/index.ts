@@ -10,6 +10,8 @@ import unlock from './routes/unlock';
 import scan from './routes/scan';
 import health from './routes/health';
 import logs from './routes/logs';
+import checkout from './routes/checkout';
+import webhook from './routes/webhook';
 import { handleScanQueue } from './queue/consumer';
 import { handleCron } from './cron/scheduler';
 
@@ -28,6 +30,7 @@ app.use('/api/*', rateLimit());
 app.use('/api/scan', rateLimit({ name: 'scan', max: 10, windowSec: 60 }));
 app.use('/api/scan/*', rateLimit({ name: 'scan', max: 10, windowSec: 60 }));
 app.use('/api/unlock/*', rateLimit({ name: 'unlock', max: 3, windowSec: 60 }));
+app.use('/api/checkout', rateLimit({ name: 'checkout', max: 10, windowSec: 60 }));
 
 // Admin API-key auth on the API surface. Self-skips GET/HEAD and /api/health,
 // so only mutating routes (POST/DELETE companies, POST scan, POST unlock) are
@@ -41,6 +44,8 @@ app.route('/api/unlock', unlock);
 app.route('/api/scan', scan);
 app.route('/api/health', health);
 app.route('/api/logs', logs);
+app.route('/api/checkout', checkout);
+app.route('/api/webhook', webhook);
 
 app.get('/', (c) =>
   c.json({

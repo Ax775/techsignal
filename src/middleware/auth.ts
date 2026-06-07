@@ -17,8 +17,17 @@ import type { Env } from '../types/env';
  * rather than silently left open.
  */
 
-/** Path prefixes that bypass admin auth even for mutating methods. */
-const PUBLIC_PREFIXES = ['/api/health'];
+/**
+ * Path prefixes that bypass admin auth even for mutating methods.
+ *
+ * - `/api/health`   — public status check.
+ * - `/api/checkout` — customer-initiated; creating a Stripe Checkout Session
+ *                     reveals nothing sensitive (the signal stays locked until
+ *                     payment) so it must be reachable without the admin key.
+ * - `/api/webhook`  — Stripe-to-server callback, authenticated by the Stripe
+ *                     signature rather than the admin key.
+ */
+const PUBLIC_PREFIXES = ['/api/health', '/api/checkout', '/api/webhook'];
 
 /** Methods that never mutate state and therefore stay public. */
 const SAFE_METHODS = new Set(['GET', 'HEAD', 'OPTIONS']);

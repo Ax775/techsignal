@@ -1,9 +1,12 @@
+import { useEffect } from 'react';
 import { useSignals } from '../hooks/useSignals';
 import { absolute, isFresh, timeAgo } from '../lib/time';
 import type { ChangeType, IntentSignal } from '../types';
 
 interface LiveIntentFeedProps {
   onSelect: (signal: IntentSignal) => void;
+  /** Bumped by the parent (e.g. after a successful unlock) to force a refetch. */
+  refreshNonce?: number;
 }
 
 // Each change type carries its own meaning, so each gets its own color.
@@ -36,10 +39,19 @@ const FILTERS: { key: 'all' | ChangeType; label: string }[] = [
   { key: 'vulnerability', label: 'Vulnerability' },
 ];
 
-export default function LiveIntentFeed({ onSelect }: LiveIntentFeedProps) {
-  const { signals, isLoading, error, updatedAt, filters, setFilters } =
+export default function LiveIntentFeed({
+  onSelect,
+  refreshNonce,
+}: LiveIntentFeedProps) {
+  const { signals, isLoading, error, updatedAt, filters, setFilters, refetch } =
     useSignals();
   const active = filters.type ?? 'all';
+
+  // Refetch when the parent signals a change (skip the initial mount, which
+  // already fetches via the hook).
+  useEffect(() => {
+    if (refreshNonce) void refetch();
+  }, [refreshNonce, refetch]);
 
   return (
     <section>

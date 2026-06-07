@@ -32,9 +32,14 @@ ALLOWED_ORIGINS = "https://techsignal-dashboard.pages.dev,https://techsignal.pag
 RATE_LIMIT_MAX = "60"
 RATE_LIMIT_WINDOW_SECONDS = "60"
 UNLOCK_PRICE_EUR = "49"
+DASHBOARD_URL = "https://techsignal-dashboard.pages.dev"
 
 # Secrets (set via `wrangler secret put <NAME>`):
-# AI_API_KEY  (for LLM pitch generation — currently mocked)
-# ADMIN_KEY   (Bearer token required for mutating API routes: POST/DELETE
-#              companies, POST scan, POST unlock. Generate a long random value,
-#              e.g. `openssl rand -hex 32`. Mutations fail closed until set.)
+# AI_API_KEY              (for LLM pitch generation — currently mocked)
+# ADMIN_KEY               (Bearer token required for mutating API routes:
+#                          POST/DELETE companies, POST scan, POST unlock.
+#                          Generate a long random value, e.g.
+#                          `openssl rand -hex 32`. Mutations fail closed until set.)
+# STRIPE_SECRET_KEY       (Stripe API secret — `sk_live_…` / `sk_test_…`)
+# STRIPE_PUBLISHABLE_KEY  (Stripe publishable key — `pk_live_…` / `pk_test_…`)
+# STRIPE_WEBHOOK_SECRET   (Stripe webhook signing secret — `whsec_…`)

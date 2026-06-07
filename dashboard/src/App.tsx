@@ -19,9 +19,29 @@ const TABS: { key: Tab; label: string }[] = [
 export default function App() {
   const [tab, setTab] = useState<Tab>('feed');
   const [selected, setSelected] = useState<IntentSignal | null>(null);
+  const [toast, setToast] = useState<string | null>(null);
+  // Bumped after a successful payment to force the feed to refetch.
+  const [refreshNonce, setRefreshNonce] = useState(0);
 
   // App-level (unfiltered) signal stream powers the headline stat row.
-  const { signals, total } = useSignals();
+  const { signals, total, refetch } = useSignals();
+
+  // When Stripe redirects back to /unlock/success?session_id=… the payment has
+  // completed (the webhook flips the signal to unlocked server-side). Show a
+  // confirmation, refresh the signals, and strip the query so a reload is clean.
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (!params.get('session_id')) return;
+
+    setTab('feed');
+    setToast('Betaling geslaagd — signal unlocked');
+    void refetch();
+    setRefreshNonce((n) => n + 1);
+
+    window.history.replaceState({}, '', window.location.pathname);
+    const id = window.setTimeout(() => setToast(null), 5000);
+    return () => window.clearTimeout(id);
+  }, [refetch]);
   const churn = signals.filter((s) => s.change_type === 'churn').length;
   const adoption = signals.filter((s) => s.change_type === 'adoption').length;
   const avgValue = signals.length
@@ -68,7 +88,7 @@ export default function App() {
                 <span className="text-slate-500">avg value</span>
               </span>
             </p>
-            <LiveIntentFeed onSelect={setSelected} />
+            <LiveIntentFeed onSelect={setSelected} refreshNonce={refreshNonce} />
           </div>
         )}
 
@@ -77,11 +97,18 @@ export default function App() {
         {tab === 'logs' && <LogsPanel />}
       </main>
 
-      <UnlockModal
-        signal={selected}
-        onClose={() => setSelected(null)}
-        onUnlocked={(s) => setSelected(s)}
-      />
+      <UnlockModal signal={selected} onClose={() => setSelected(null)} />
+
+      {toast && (
+        <div
+          role="status"
+          aria-live="polite"
+          className="fixed bottom-4 right-4 z-[60] flex items-center gap-2 rounded-md border border-emerald-700/60 bg-emerald-950/90 px-4 py-2.5 text-sm text-emerald-200 shadow-lg"
+        >
+          <span className="h-1.5 w-1.5 rounded-full bg-emerald-400" />
+          {toast}
+        </div>
+      )}
     </div>
   );
 }

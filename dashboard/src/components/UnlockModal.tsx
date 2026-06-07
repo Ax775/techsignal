@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { X, Copy } from 'lucide-react';
-import { unlockSignal } from '../api/client';
+import { createCheckoutSession } from '../api/client';
 import { absolute, timeAgo } from '../lib/time';
 import type { ChangeType, IntentSignal } from '../types';
 
 interface UnlockModalProps {
   signal: IntentSignal | null;
   onClose: () => void;
-  onUnlocked: (signal: IntentSignal) => void;
 }
 
 const TYPE_TEXT: Record<ChangeType, string> = {
@@ -22,23 +21,15 @@ const TYPE_LABEL: Record<ChangeType, string> = {
   vulnerability: 'Vulnerability',
 };
 
-export default function UnlockModal({
-  signal,
-  onClose,
-  onUnlocked,
-}: UnlockModalProps) {
-  const [paymentRef, setPaymentRef] = useState('');
+export default function UnlockModal({ signal, onClose }: UnlockModalProps) {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [unlocked, setUnlocked] = useState<IntentSignal | null>(null);
   const [copied, setCopied] = useState(false);
 
   // Reset internal state whenever the target signal changes.
   useEffect(() => {
-    setPaymentRef('');
     setSubmitting(false);
     setError(null);
-    setUnlocked(null);
     setCopied(false);
   }, [signal?.id]);
 
@@ -54,25 +45,24 @@ export default function UnlockModal({
 
   if (!signal) return null;
 
-  const view = unlocked ?? signal;
-  const isUnlocked = Boolean(unlocked) || view.status === 'unlocked';
+  const view = signal;
+  const isUnlocked = view.status === 'unlocked';
 
-  const handleUnlock = async () => {
-    if (!paymentRef.trim()) {
-      setError('Enter your reference code to continue.');
-      return;
-    }
+  // Create a Stripe Checkout Session and hand the browser off to Stripe's
+  // hosted payment page. On success Stripe redirects back to
+  // /unlock/success?session_id=… where App picks up the result.
+  const handleCheckout = async () => {
     setSubmitting(true);
     setError(null);
     try {
-      const res = await unlockSignal(signal.id, paymentRef.trim());
-      setUnlocked(res.data);
-      onUnlocked(res.data);
+      const { url } = await createCheckoutSession(signal.id);
+      window.location.assign(url);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Unlock failed.');
-    } finally {
+      setError(err instanceof Error ? err.message : 'Could not start checkout.');
       setSubmitting(false);
     }
+    // On success the browser navigates away, so we deliberately leave
+    // `submitting` true to keep the button disabled during the redirect.
   };
 
   const handleCopy = async () => {
@@ -174,40 +164,20 @@ export default function UnlockModal({
                   </ul>
                 </div>
 
-                <div>
-                  <label
-                    htmlFor="payment_ref"
-                    className="mb-1.5 block text-xs font-medium text-slate-300"
-                  >
-                    Reference code
-                  </label>
-                  <input
-                    id="payment_ref"
-                    type="text"
-                    value={paymentRef}
-                    onChange={(e) => setPaymentRef(e.target.value)}
-                    placeholder="Any non-empty string unlocks"
-                    className="tabular w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-slate-100 outline-none transition focus:border-blue-500 focus:ring-1 focus:ring-blue-500/40"
-                  />
-                  <p className="mt-1.5 text-[11px] text-slate-500">
-                    Demo mode — any reference code unlocks the pitch.
-                  </p>
-                </div>
-
                 {error && <p className="text-xs text-red-400">{error}</p>}
 
                 <button
                   type="button"
-                  onClick={handleUnlock}
+                  onClick={handleCheckout}
                   disabled={submitting}
                   className="w-full rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white transition hover:bg-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/50 disabled:opacity-60"
                 >
                   {submitting
-                    ? 'Unlocking…'
-                    : `Unlock pitch — €${view.price.toFixed(0)}`}
+                    ? 'Redirecting to checkout…'
+                    : `Unlock for €${view.price.toFixed(0)}`}
                 </button>
                 <p className="tabular text-center text-[11px] text-slate-500">
-                  One-time, per signal
+                  Secure one-time payment via Stripe
                 </p>
               </div>
             ) : (

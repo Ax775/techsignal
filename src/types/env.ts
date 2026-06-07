@@ -9,6 +9,14 @@ export interface Env {
   RATE_LIMIT_MAX: string;
   RATE_LIMIT_WINDOW_SECONDS: string;
   UNLOCK_PRICE_EUR: string;
+  /** Stripe API secret key (wrangler secret). */
+  STRIPE_SECRET_KEY: string;
+  /** Stripe publishable key (wrangler secret). */
+  STRIPE_PUBLISHABLE_KEY: string;
+  /** Stripe webhook signing secret (wrangler secret). */
+  STRIPE_WEBHOOK_SECRET: string;
+  /** Public dashboard origin, used to build Checkout success/cancel URLs. */
+  DASHBOARD_URL: string;
 }
 
 export interface ScanQueueMessage {
