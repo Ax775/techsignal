@@ -27,3 +27,4 @@ dashboard/playwright-report/
 
 # TS build info
 *.tsbuildinfo
+luminex/

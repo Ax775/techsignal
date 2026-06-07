@@ -35,4 +35,13 @@
 - [ ] Run npm test, fix failures, report
 
 ## Review (test suite)
-(filled in after run)
+- All boxes above done. 61/61 tests pass; `tsc --noEmit -p tsconfig.json` exits 0.
+- Runner: plain Vitest (node env), `src/__tests__/**/*.test.ts`. Node 26 supplies
+  crypto.subtle / fetch / AbortController / URL natively, so no Workers pool needed.
+- Root-cause fix: crawler had NO SSRF protection though the spec required it.
+  Added `isBlockedHost` + per-hop guard in `fetchWithStealth` (blocks loopback,
+  RFC1918, link-local 169.254, CGNAT, IPv6 ULA/link-local, localhost, `.local`),
+  applied to the initial URL AND every redirect target → returns
+  `blocked_private_address` without touching the network.
+- Files: vitest.config.ts; src/__tests__/{parser,differ,kv-hash,ai-pitch,crawler}.test.ts;
+  package.json scripts test/test:watch.

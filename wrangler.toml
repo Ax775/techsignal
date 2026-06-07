@@ -28,7 +28,7 @@ dead_letter_queue = "techsignal-scan-dlq"
 crons = ["0 */6 * * *"]  # Every 6 hours
 
 [vars]
-ALLOWED_ORIGINS = "https://techsignal.pages.dev,http://localhost:5173"
+ALLOWED_ORIGINS = "https://techsignal-dashboard.pages.dev,https://techsignal.pages.dev,http://localhost:5173"
 RATE_LIMIT_MAX = "60"
 RATE_LIMIT_WINDOW_SECONDS = "60"
 UNLOCK_PRICE_EUR = "49"
