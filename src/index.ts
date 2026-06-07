@@ -9,6 +9,7 @@ import signals from './routes/signals';
 import unlock from './routes/unlock';
 import scan from './routes/scan';
 import health from './routes/health';
+import logs from './routes/logs';
 import { handleScanQueue } from './queue/consumer';
 import { handleCron } from './cron/scheduler';
 
@@ -39,6 +40,7 @@ app.route('/api/signals', signals);
 app.route('/api/unlock', unlock);
 app.route('/api/scan', scan);
 app.route('/api/health', health);
+app.route('/api/logs', logs);
 
 app.get('/', (c) =>
   c.json({
