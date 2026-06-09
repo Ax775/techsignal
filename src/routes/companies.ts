@@ -7,14 +7,9 @@ import {
   type CompanyRow,
   type TechSnapshotRow,
 } from '../types/domain';
+import { clampInt } from '../lib/http';
 
 const app = new Hono<{ Bindings: Env }>();
-
-function clampInt(value: string | undefined, def: number, min: number, max: number): number {
-  const n = Number.parseInt(value ?? '', 10);
-  if (Number.isNaN(n)) return def;
-  return Math.min(max, Math.max(min, n));
-}
 
 // GET /api/companies — paginated list with optional search.
 app.get('/', async (c) => {

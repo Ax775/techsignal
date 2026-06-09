@@ -104,6 +104,16 @@ export interface IntentSignal extends IntentSignalRow {
   company_name?: string | null;
 }
 
+/**
+ * Row shape returned by the `intent_signals` ⋈ `companies` join used by the
+ * signals, checkout and unlock routes. Unlike {@link IntentSignal}, the joined
+ * columns are always present (the JOIN guarantees a parent company).
+ */
+export interface SignalJoinRow extends IntentSignalRow {
+  domain: string;
+  company_name: string | null;
+}
+
 export interface SystemLogRow {
   id: string;
   event: string;

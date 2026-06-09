@@ -1,13 +1,8 @@
 import { Hono } from 'hono';
 import type { Env } from '../types/env';
-import { UnlockSchema, type IntentSignalRow } from '../types/domain';
+import { UnlockSchema, type IntentSignalRow, type SignalJoinRow } from '../types/domain';
 
 const app = new Hono<{ Bindings: Env }>();
-
-interface SignalJoinRow extends IntentSignalRow {
-  domain: string;
-  company_name: string | null;
-}
 
 // POST /api/unlock/:id — body: { payment_ref }
 // Mock payment: any non-empty payment_ref unlocks. In production this would

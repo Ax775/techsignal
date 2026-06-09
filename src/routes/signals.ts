@@ -1,21 +1,11 @@
 import { Hono } from 'hono';
 import type { Env } from '../types/env';
-import type { ChangeType, IntentSignalRow, SignalStatus } from '../types/domain';
+import type { ChangeType, SignalJoinRow, SignalStatus } from '../types/domain';
+import { clampInt } from '../lib/http';
 
 const app = new Hono<{ Bindings: Env }>();
 
-interface SignalJoinRow extends IntentSignalRow {
-  domain: string;
-  company_name: string | null;
-}
-
 const LOCKED_PITCH = '[LOCKED — unlock to reveal personalized pitch]';
-
-function clampInt(value: string | undefined, def: number, min: number, max: number): number {
-  const n = Number.parseInt(value ?? '', 10);
-  if (Number.isNaN(n)) return def;
-  return Math.min(max, Math.max(min, n));
-}
 
 function redactLocked(row: SignalJoinRow): SignalJoinRow {
   if (row.status === 'unlocked') return row;

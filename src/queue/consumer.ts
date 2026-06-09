@@ -4,6 +4,7 @@ import {
   type ChangeEvent,
   type TechSnapshotRow,
   type CompanyRow,
+  type TechStack,
 } from '../types/domain';
 import { fetchWithStealth } from '../services/crawler';
 import { parseTechStack, techStackToSignature } from '../services/parser';
@@ -95,24 +96,35 @@ async function processMessage(
     .first<TechSnapshotRow>();
 
   const events: ChangeEvent[] = [];
+  let prevStack: TechStack | null = null;
 
   if (prevRow) {
     // Reconstruct the previous stack from the company row's stored stack,
     // which represents the last fully-scanned state.
     const companyRow = await env.DB.prepare(
-      'SELECT * FROM companies WHERE id = ?',
+      'SELECT current_tech_stack FROM companies WHERE id = ?',
     )
       .bind(companyId)
-      .first<CompanyRow>();
-    const prevStack = safeParseTechStack(
-      companyRow?.current_tech_stack ?? '{}',
-    );
+      .first<Pick<CompanyRow, 'current_tech_stack'>>();
+    prevStack = safeParseTechStack(companyRow?.current_tech_stack ?? '{}');
     events.push(...diffTechStacks(prevStack, stack));
   }
 
-  // Vulnerability signals are computed from the current stack regardless of
-  // whether a prior snapshot existed.
-  events.push(...detectVulnerabilitySignals(stack));
+  // Vulnerability signals reflect an ongoing risk state, not a point-in-time
+  // event. Emit only those that are NEWLY applicable since the previous scan —
+  // otherwise a persistent risk (e.g. Magento without a WAF) would mint a fresh
+  // paid signal on every scan where unrelated page content changed, growing
+  // intent_signals without bound. On the first scan (no prior stack) every
+  // current risk is emitted once.
+  const currVulns = detectVulnerabilitySignals(stack);
+  if (prevStack) {
+    const prevVulnTechs = new Set(
+      detectVulnerabilitySignals(prevStack).map((v) => v.tech),
+    );
+    events.push(...currVulns.filter((v) => !prevVulnTechs.has(v.tech)));
+  } else {
+    events.push(...currVulns);
+  }
 
   // Insert the new snapshot.
   await env.DB.prepare(

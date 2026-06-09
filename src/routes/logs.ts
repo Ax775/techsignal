@@ -1,14 +1,9 @@
 import { Hono } from 'hono';
 import type { Env } from '../types/env';
 import type { SystemLogRow } from '../types/domain';
+import { clampInt } from '../lib/http';
 
 const app = new Hono<{ Bindings: Env }>();
-
-function clampInt(value: string | undefined, def: number, min: number, max: number): number {
-  const n = Number.parseInt(value ?? '', 10);
-  if (Number.isNaN(n)) return def;
-  return Math.min(max, Math.max(min, n));
-}
 
 const VALID_LEVELS: SystemLogRow['level'][] = ['info', 'warn', 'error', 'success'];
 

@@ -1,14 +1,9 @@
 import { Hono } from 'hono';
 import type { Env } from '../types/env';
-import { CheckoutSchema, type IntentSignalRow } from '../types/domain';
+import { CheckoutSchema, type SignalJoinRow } from '../types/domain';
 import { stripeClient } from '../lib/stripe';
 
 const app = new Hono<{ Bindings: Env }>();
-
-interface SignalJoinRow extends IntentSignalRow {
-  domain: string;
-  company_name: string | null;
-}
 
 // POST /api/checkout — body: { signal_id }
 // Creates a Stripe Checkout Session for unlocking a single intent signal and
