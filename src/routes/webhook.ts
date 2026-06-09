@@ -26,6 +26,13 @@ app.post('/', async (c) => {
     return c.json({ error: 'invalid_signature' }, 400);
   }
 
+  // Idempotency: Stripe may deliver the same event multiple times. Use KV as a
+  // dedup store keyed on the event id so a retry never re-sends the payment
+  // email or re-runs the unlock side effects.
+  const eventKey = `stripe_event:${event.id}`;
+  const seen = await c.env.HASH_STORE.get(eventKey);
+  if (seen) return c.json({ received: true }); // already processed
+
   if (event.type === 'checkout.session.completed') {
     const session = event.data.object as Stripe.Checkout.Session;
     const signalId = session.metadata?.signal_id;
@@ -65,8 +72,8 @@ app.post('/', async (c) => {
         const price = signal?.price ?? 49;
         const resend = new Resend(c.env.RESEND_API_KEY);
         await resend.emails.send({
-          from: 'TechSignal <notifications@techsignal.xaven.nl>',
-          to: 'alexander_kahwagi@hotmail.com',
+          from: c.env.RESEND_FROM,
+          to: c.env.NOTIFY_EMAIL,
           subject: `💰 Signal unlocked — €${price.toFixed(2)} received`,
           html: `
             <p><strong>New payment received on TechSignal</strong></p>
@@ -74,7 +81,7 @@ app.post('/', async (c) => {
             Company: ${signal?.company_id ?? 'unknown'}<br>
             Amount: €${price.toFixed(2)}<br>
             Time: ${new Date().toISOString()}</p>
-            <p><a href="https://techsignal-dashboard.pages.dev">View dashboard →</a></p>
+            <p><a href="${c.env.DASHBOARD_URL}">View dashboard →</a></p>
           `,
         });
       } catch {
@@ -84,6 +91,9 @@ app.post('/', async (c) => {
       console.error('stripe_webhook_missing_signal_id', { id: session.id });
     }
   }
+
+  // Mark this event processed (7-day TTL) so duplicate deliveries are ignored.
+  await c.env.HASH_STORE.put(eventKey, '1', { expirationTtl: 7 * 24 * 60 * 60 });
 
   // Acknowledge all events (handled or not) so Stripe stops retrying.
   return c.json({ received: true });

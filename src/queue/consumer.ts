@@ -44,7 +44,7 @@ async function setStatus(
     .run();
 }
 
-async function processMessage(
+async function runScan(
   env: Env,
   msg: ScanQueueMessage,
 ): Promise<void> {
@@ -219,32 +219,45 @@ function filterHeaders(
 }
 
 /**
- * Queue consumer entrypoint. Each message is isolated in its own try/catch so
- * a single failure neither aborts the batch nor blocks unrelated companies.
+ * Process a single queue message, acking on success and retrying on failure.
+ * Each message owns its own try/catch and ack/retry so a single failure
+ * neither aborts the batch nor blocks unrelated companies.
+ */
+async function processMessage(
+  message: Message<ScanQueueMessage>,
+  env: Env,
+): Promise<void> {
+  try {
+    await runScan(env, message.body);
+    message.ack();
+  } catch (err) {
+    const reason = err instanceof Error ? err.message : 'unknown_error';
+    await logEvent(env, 'scan_exception', 'error', {
+      domain: message.body?.domain,
+      reason,
+    });
+    try {
+      if (message.body?.companyId) {
+        await setStatus(env, message.body.companyId, 'error');
+      }
+    } catch {
+      // ignore secondary failure
+    }
+    // Retry up to the queue's max_retries; after that it lands in the DLQ.
+    message.retry();
+  }
+}
+
+/**
+ * Queue consumer entrypoint. Messages are processed concurrently — each one
+ * acks/retries itself, so Promise.allSettled simply waits for the whole batch
+ * to settle without letting one failure reject the others.
  */
 export async function handleScanQueue(
   batch: MessageBatch<ScanQueueMessage>,
   env: Env,
 ): Promise<void> {
-  for (const message of batch.messages) {
-    try {
-      await processMessage(env, message.body);
-      message.ack();
-    } catch (err) {
-      const reason = err instanceof Error ? err.message : 'unknown_error';
-      await logEvent(env, 'scan_exception', 'error', {
-        domain: message.body?.domain,
-        reason,
-      });
-      try {
-        if (message.body?.companyId) {
-          await setStatus(env, message.body.companyId, 'error');
-        }
-      } catch {
-        // ignore secondary failure
-      }
-      // Retry up to the queue's max_retries; after that it lands in the DLQ.
-      message.retry();
-    }
-  }
+  await Promise.allSettled(
+    batch.messages.map((message) => processMessage(message, env)),
+  );
 }

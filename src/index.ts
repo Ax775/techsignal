@@ -6,7 +6,6 @@ import { adminAuth } from './middleware/auth';
 import { securityHeaders } from './middleware/security-headers';
 import companies from './routes/companies';
 import signals from './routes/signals';
-import unlock from './routes/unlock';
 import scan from './routes/scan';
 import health from './routes/health';
 import logs from './routes/logs';
@@ -29,18 +28,15 @@ app.use('*', cors());
 app.use('/api/*', rateLimit());
 app.use('/api/scan', rateLimit({ name: 'scan', max: 10, windowSec: 60 }));
 app.use('/api/scan/*', rateLimit({ name: 'scan', max: 10, windowSec: 60 }));
-app.use('/api/unlock/*', rateLimit({ name: 'unlock', max: 3, windowSec: 60 }));
 app.use('/api/checkout', rateLimit({ name: 'checkout', max: 10, windowSec: 60 }));
 
 // Admin API-key auth on the API surface. Self-skips GET/HEAD and /api/health,
-// so only mutating routes (POST/DELETE companies, POST scan, POST unlock) are
-// gated.
+// so only mutating routes (POST/DELETE companies, POST scan) are gated.
 app.use('/api/*', adminAuth());
 
 // Mount feature routers.
 app.route('/api/companies', companies);
 app.route('/api/signals', signals);
-app.route('/api/unlock', unlock);
 app.route('/api/scan', scan);
 app.route('/api/health', health);
 app.route('/api/logs', logs);

@@ -274,11 +274,6 @@ export const ScanSchema = z.object({
 });
 export type ScanInput = z.infer<typeof ScanSchema>;
 
-export const UnlockSchema = z.object({
-  payment_ref: z.string().trim().min(1, 'payment_ref is required').max(200),
-});
-export type UnlockInput = z.infer<typeof UnlockSchema>;
-
 export const CheckoutSchema = z.object({
   signal_id: z.string().trim().min(1, 'signal_id is required').max(100),
 });

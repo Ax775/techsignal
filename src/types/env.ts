@@ -19,6 +19,10 @@ export interface Env {
   DASHBOARD_URL: string;
   /** Resend API key for payment-notification emails (wrangler secret). */
   RESEND_API_KEY: string;
+  /** Recipient of payment-notification emails. */
+  NOTIFY_EMAIL: string;
+  /** Verified Resend sender address for outbound notifications. */
+  RESEND_FROM: string;
 }
 
 export interface ScanQueueMessage {

@@ -33,6 +33,8 @@ RATE_LIMIT_MAX = "60"
 RATE_LIMIT_WINDOW_SECONDS = "60"
 UNLOCK_PRICE_EUR = "49"
 DASHBOARD_URL = "https://techsignal-dashboard.pages.dev"
+NOTIFY_EMAIL = "alexander_kahwagi@hotmail.com"
+RESEND_FROM = "notifications@techsignal.xaven.nl"
 
 # Secrets (set via `wrangler secret put <NAME>`):
 # AI_API_KEY              (for LLM pitch generation — currently mocked)
