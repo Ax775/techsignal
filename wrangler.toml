@@ -43,3 +43,7 @@ DASHBOARD_URL = "https://techsignal-dashboard.pages.dev"
 # STRIPE_SECRET_KEY       (Stripe API secret — `sk_live_…` / `sk_test_…`)
 # STRIPE_PUBLISHABLE_KEY  (Stripe publishable key — `pk_live_…` / `pk_test_…`)
 # STRIPE_WEBHOOK_SECRET   (Stripe webhook signing secret — `whsec_…`)
+# RESEND_API_KEY          (Resend API key — `re_…` — for payment-notification
+#                          emails to the owner. Sender domain techsignal.xaven.nl
+#                          must be verified in Resend. Notifications are
+#                          fire-and-forget; a missing key never breaks payments.)

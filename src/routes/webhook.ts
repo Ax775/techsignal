@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { Resend } from 'resend';
 import type Stripe from 'stripe';
 import type { Env } from '../types/env';
 import { constructWebhookEvent } from '../lib/stripe';
@@ -52,6 +53,32 @@ app.post('/', async (c) => {
           .run();
       } catch {
         // best-effort logging
+      }
+
+      // Send email notification (fire-and-forget, never blocks the webhook).
+      try {
+        const signal = await c.env.DB.prepare(
+          'SELECT * FROM intent_signals WHERE id = ?',
+        )
+          .bind(signalId)
+          .first<{ company_id?: string; price?: number }>();
+        const price = signal?.price ?? 49;
+        const resend = new Resend(c.env.RESEND_API_KEY);
+        await resend.emails.send({
+          from: 'TechSignal <notifications@techsignal.xaven.nl>',
+          to: 'alexander_kahwagi@hotmail.com',
+          subject: `💰 Signal unlocked — €${price.toFixed(2)} received`,
+          html: `
+            <p><strong>New payment received on TechSignal</strong></p>
+            <p>Signal ID: ${signalId}<br>
+            Company: ${signal?.company_id ?? 'unknown'}<br>
+            Amount: €${price.toFixed(2)}<br>
+            Time: ${new Date().toISOString()}</p>
+            <p><a href="https://techsignal-dashboard.pages.dev">View dashboard →</a></p>
+          `,
+        });
+      } catch {
+        // non-fatal: notification failure must never fail the webhook
       }
     } else {
       console.error('stripe_webhook_missing_signal_id', { id: session.id });

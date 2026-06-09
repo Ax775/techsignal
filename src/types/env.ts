@@ -17,6 +17,8 @@ export interface Env {
   STRIPE_WEBHOOK_SECRET: string;
   /** Public dashboard origin, used to build Checkout success/cancel URLs. */
   DASHBOARD_URL: string;
+  /** Resend API key for payment-notification emails (wrangler secret). */
+  RESEND_API_KEY: string;
 }
 
 export interface ScanQueueMessage {
